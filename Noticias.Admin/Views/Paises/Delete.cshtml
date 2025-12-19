@@ -1,0 +1,17 @@
+@model Noticias.Admin.Models.Pais
+
+@{
+    ViewData["Title"] = "Eliminar País";
+}
+
+<h2>¿Está seguro de eliminar este país?</h2>
+
+<div class="alert alert-warning">
+    <strong>País:</strong> @Model.Nombre
+</div>
+
+<form asp-action="Delete" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-danger">Sí, Eliminar</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>

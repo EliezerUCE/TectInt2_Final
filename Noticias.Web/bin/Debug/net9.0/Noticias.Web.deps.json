@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v9.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v9.0": {
+      "Noticias.Web/1.0.0": {
+        "runtime": {
+          "Noticias.Web.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Noticias.Web/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

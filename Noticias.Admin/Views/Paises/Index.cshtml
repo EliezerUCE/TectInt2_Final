@@ -1,0 +1,33 @@
+@model IEnumerable<Noticias.Admin.Models.Pais>
+
+@{
+    ViewData["Title"] = "Países";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Lista de Países</h2>
+    <a asp-action="Create" class="btn btn-success">+ Nuevo País</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var pais in Model)
+        {
+            <tr>
+                <td>@pais.Id</td>
+                <td>@pais.Nombre</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@pais.Id" class="btn btn-sm btn-warning">Editar</a>
+                    <a asp-action="Delete" asp-route-id="@pais.Id" class="btn btn-sm btn-danger">Eliminar</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

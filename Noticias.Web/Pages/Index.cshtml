@@ -1,0 +1,351 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Noticias";
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portal de Noticias</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        .noticia-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .noticia-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .badge-categoria {
+            font-size: 0.75rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">📰 Portal de Noticias</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4" id="app">
+        <!-- Filtros -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <label class="form-label">Filtrar por País</label>
+                <select class="form-select" id="filtroPais" onchange="filtrarPorPais()">
+                    <option value="">Todos los países</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Filtrar por Categoría</label>
+                <select class="form-select" id="filtroCategoria" onchange="filtrarPorCategoria()">
+                    <option value="">Todas las categorías</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Buscar</label>
+                <div class="input-group">
+                    <input type="text" class="form-control" id="busqueda" placeholder="Buscar noticias...">
+                    <button class="btn btn-primary" onclick="buscarNoticias()">Buscar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Título de resultados -->
+        <div class="row mb-3">
+            <div class="col">
+                <h4 id="tituloResultados">Últimas Noticias</h4>
+            </div>
+        </div>
+
+        <!-- Contenedor de noticias -->
+        <div class="row" id="noticiasContainer">
+            <div class="col-12 text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Cargando...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para ver detalle de noticia -->
+        <div class="modal fade" id="noticiaModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="noticiaModalTitulo"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="noticiaModalContenido"></div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-light mt-5 py-3">
+        <div class="container text-center">
+            <p class="text-muted mb-0">© 2024 Portal de Noticias - Todos los derechos reservados</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = 'https://localhost:7001/api'; // Cambiar según el puerto de tu API
+
+        let todasLasNoticias = [];
+        let paises = [];
+        let categorias = [];
+
+        // Inicializar la aplicación
+        async function inicializar() {
+            try {
+                await cargarPaises();
+                await cargarCategorias();
+                await cargarNoticias();
+            } catch (error) {
+                console.error('Error al inicializar:', error);
+                mostrarError('Error al cargar los datos iniciales');
+            }
+        }
+
+        // Cargar países
+        async function cargarPaises() {
+            try {
+                const response = await fetch(`${API_URL}/paises`);
+                paises = await response.json();
+                
+                const select = document.getElementById('filtroPais');
+                paises.forEach(pais => {
+                    const option = document.createElement('option');
+                    option.value = pais.id;
+                    option.textContent = pais.nombre;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar países:', error);
+            }
+        }
+
+        // Cargar categorías
+        async function cargarCategorias() {
+            try {
+                const response = await fetch(`${API_URL}/categorias`);
+                categorias = await response.json();
+                
+                const select = document.getElementById('filtroCategoria');
+                categorias.forEach(categoria => {
+                    const option = document.createElement('option');
+                    option.value = categoria.id;
+                    option.textContent = categoria.nombre;
+                    select.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error al cargar categorías:', error);
+            }
+        }
+
+        // Cargar todas las noticias
+        async function cargarNoticias() {
+            try {
+                const response = await fetch(`${API_URL}/noticias`);
+                todasLasNoticias = await response.json();
+                mostrarNoticias(todasLasNoticias);
+                document.getElementById('tituloResultados').textContent = 'Últimas Noticias';
+            } catch (error) {
+                console.error('Error al cargar noticias:', error);
+                mostrarError('Error al cargar las noticias');
+            }
+        }
+
+        // Filtrar por país
+        async function filtrarPorPais() {
+            const paisId = document.getElementById('filtroPais').value;
+            
+            if (!paisId) {
+                await cargarNoticias();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/noticias/pais/${paisId}`);
+                const noticias = await response.json();
+                mostrarNoticias(noticias);
+                
+                const paisNombre = paises.find(p => p.id == paisId)?.nombre || 'País seleccionado';
+                document.getElementById('tituloResultados').textContent = `Noticias de ${paisNombre}`;
+                
+                // Resetear otros filtros
+                document.getElementById('filtroCategoria').value = '';
+                document.getElementById('busqueda').value = '';
+            } catch (error) {
+                console.error('Error al filtrar por país:', error);
+                mostrarError('Error al filtrar noticias');
+            }
+        }
+
+        // Filtrar por categoría
+        async function filtrarPorCategoria() {
+            const categoriaId = document.getElementById('filtroCategoria').value;
+            
+            if (!categoriaId) {
+                await cargarNoticias();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/noticias/categoria/${categoriaId}`);
+                const noticias = await response.json();
+                mostrarNoticias(noticias);
+                
+                const categoriaNombre = categorias.find(c => c.id == categoriaId)?.nombre || 'Categoría seleccionada';
+                document.getElementById('tituloResultados').textContent = `Noticias de ${categoriaNombre}`;
+                
+                // Resetear otros filtros
+                document.getElementById('filtroPais').value = '';
+                document.getElementById('busqueda').value = '';
+            } catch (error) {
+                console.error('Error al filtrar por categoría:', error);
+                mostrarError('Error al filtrar noticias');
+            }
+        }
+
+        // Buscar noticias
+        async function buscarNoticias() {
+            const termino = document.getElementById('busqueda').value.trim();
+            
+            if (!termino) {
+                await cargarNoticias();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/noticias/buscar?termino=${encodeURIComponent(termino)}`);
+                const noticias = await response.json();
+                mostrarNoticias(noticias);
+                
+                document.getElementById('tituloResultados').textContent = `Resultados de búsqueda: "${termino}"`;
+                
+                // Resetear otros filtros
+                document.getElementById('filtroPais').value = '';
+                document.getElementById('filtroCategoria').value = '';
+            } catch (error) {
+                console.error('Error al buscar noticias:', error);
+                mostrarError('Error al buscar noticias');
+            }
+        }
+
+        // Buscar al presionar Enter
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('busqueda')?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    buscarNoticias();
+                }
+            });
+        });
+
+        // Mostrar noticias en el DOM
+        function mostrarNoticias(noticias) {
+            const container = document.getElementById('noticiasContainer');
+            
+            if (noticias.length === 0) {
+                container.innerHTML = `
+                    <div class="col-12">
+                        <div class="alert alert-info">
+                            No se encontraron noticias con los criterios seleccionados.
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = noticias.map(noticia => `
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card noticia-card h-100" onclick="verDetalle(${noticia.id})">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="badge bg-primary badge-categoria">${noticia.categoria?.nombre || 'Sin categoría'}</span>
+                                <span class="badge bg-secondary badge-categoria">${noticia.pais?.nombre || 'Sin país'}</span>
+                            </div>
+                            <h5 class="card-title">${noticia.titulo}</h5>
+                            <p class="card-text text-muted">${noticia.contenido.substring(0, 150)}...</p>
+                            <div class="d-flex justify-content-between align-items-center mt-3">
+                                <small class="text-muted">
+                                    <i class="bi bi-person"></i> ${noticia.usuario?.nombre || 'Anónimo'}
+                                </small>
+                                <small class="text-muted">
+                                    ${formatearFecha(noticia.fechaPublicacion)}
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Ver detalle de noticia
+        async function verDetalle(id) {
+            try {
+                const response = await fetch(`${API_URL}/noticias/${id}`);
+                const noticia = await response.json();
+                
+                document.getElementById('noticiaModalTitulo').textContent = noticia.titulo;
+                document.getElementById('noticiaModalContenido').innerHTML = `
+                    <div class="mb-3">
+                        <span class="badge bg-primary me-2">${noticia.categoria?.nombre}</span>
+                        <span class="badge bg-secondary">${noticia.pais?.nombre}</span>
+                    </div>
+                    <p class="text-muted">
+                        Por ${noticia.usuario?.nombre} - ${formatearFecha(noticia.fechaPublicacion)}
+                    </p>
+                    <hr>
+                    <p>${noticia.contenido}</p>
+                `;
+                
+                const modal = new bootstrap.Modal(document.getElementById('noticiaModal'));
+                modal.show();
+            } catch (error) {
+                console.error('Error al cargar detalle:', error);
+                alert('Error al cargar el detalle de la noticia');
+            }
+        }
+
+        // Formatear fecha
+        function formatearFecha(fecha) {
+            const date = new Date(fecha);
+            const opciones = { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            return date.toLocaleDateString('es-ES', opciones);
+        }
+
+        // Mostrar error
+        function mostrarError(mensaje) {
+            document.getElementById('noticiasContainer').innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        ${mensaje}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Inicializar al cargar la página
+        inicializar();
+    </script>
+</body>
+</html>

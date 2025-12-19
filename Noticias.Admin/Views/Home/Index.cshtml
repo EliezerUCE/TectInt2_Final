@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Inicio";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h1>Bienvenido al Sistema de Administración de Noticias</h1>
+        <p class="lead">Panel de control para gestionar noticias, categorías, países y usuarios.</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">📰 Noticias</h5>
+                <p class="card-text">Administra las noticias del sistema.</p>
+                <a asp-controller="NoticiasAdmin" asp-action="Index" class="btn btn-primary">Ir a Noticias</a>
+            </div>
+        </div>
+    </div>
+
+    @if (User.IsInRole("Administrador"))
+    {
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">📂 Categorías</h5>
+                    <p class="card-text">Gestiona las categorías de noticias.</p>
+                    <a asp-controller="Categorias" asp-action="Index" class="btn btn-primary">Ir a Categorías</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">🌍 Países</h5>
+                    <p class="card-text">Administra los países del sistema.</p>
+                    <a asp-controller="Paises" asp-action="Index" class="btn btn-primary">Ir a Países</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mt-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">👥 Usuarios</h5>
+                    <p class="card-text">Gestiona los usuarios del sistema.</p>
+                    <a asp-controller="Usuarios" asp-action="Index" class="btn btn-primary">Ir a Usuarios</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,6 @@
+@Noticias.API_HostAddress = http://localhost:5051
+
+GET {{Noticias.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

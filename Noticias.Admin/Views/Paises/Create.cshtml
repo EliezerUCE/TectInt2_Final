@@ -1,0 +1,17 @@
+@model Noticias.Admin.Models.Pais
+
+@{
+    ViewData["Title"] = "Nuevo País";
+}
+
+<h2>Crear Nuevo País</h2>
+
+<form asp-action="Create" method="post">
+    <div class="mb-3">
+        <label asp-for="Nombre" class="form-label">Nombre</label>
+        <input asp-for="Nombre" class="form-control" required />
+    </div>
+    
+    <button type="submit" class="btn btn-primary">Crear</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancelar</a>
+</form>
